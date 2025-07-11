@@ -1,0 +1,211 @@
+1. Water Jug 
+from collections import deque
+def water_jug(capA, capB, target):
+    visited = set()
+    q = deque([(0, 0)])
+    while q:
+        a, b = q.popleft()
+        if (a, b) in visited:
+            continue
+        visited.add((a, b))
+        print(a, b)
+        if a == target or b == target:
+            print("Done")
+            return
+        q.extend([
+            (capA, b),
+            (a, capB),
+            (0, b),
+            (a, 0),
+            (a - min(a, capB - b), b + min(a, capB - b)),
+            (a + min(b, capA - a), b - min(b, capA - a))
+        ])
+
+water_jug(4, 3, 2)
+
+
+2. Map colouring
+def colouring(n,edges):
+     graph={i:[] for i in range(n)}
+     for u,v in edges:
+         graph[u].append(v)
+         graph[v].append(u)
+     color=[-1]*n
+     color[0]=0
+     count=1
+     for u in range(1,n):
+         available=[True]*n
+         for v in graph[u]:
+             if color[v]!=-1:
+                 available[color[v]]=False
+         for c in range(n):
+             if available[c]:
+                 color[u]=c
+                 if c>=count:
+                     count+=1
+                 break
+         available=[True]*n
+     print("count :",count)
+     return color
+n=4
+edges=[[0,1],[1,2],[2,3],[3,0],[0,2]]
+print(colouring(n,edges))
+
+3.TSP
+import itertools
+def tsp(graph):
+    n = len(graph)
+    min_path = float('inf')
+    for perm in itertools.permutations(range(1, n)):
+        current_path = graph[0][perm[0]] + sum(graph[perm[i]][perm[i + 1]] for i in range(len(perm) - 1)) + graph[perm[-1]][0]
+        min_path = min(min_path, current_path)
+    return min_path
+graph = [[0, 10, 15, 20], [10, 0, 35, 25], [15, 35, 0, 30], [20, 25, 30, 0]]
+print(tsp(graph))
+
+4.Canibals
+
+from collections import deque
+start=(3,3,1)
+goal=(0,0,0)
+steps=[(2,0),(0,2),(1,1),(1,0),(0,1)]
+def safe(m,c):
+ return (m==0 or m>=c) and (3-m==0 or 3-m>=3-c)
+def solve():
+ q=deque([(start,[start])])
+ seen=set()
+ while q:
+  (m,c,b),path=q.popleft()
+  for dm,dc in steps:
+   if b==1:nm,nc,nb=m-dm,c-dc,0
+   else:nm,nc,nb=m+dm,c+dc,1
+   new=(nm,nc,nb)
+   if 0<=nm<=3 and 0<=nc<=3 and safe(nm,nc) and new not in seen:
+    if new==goal:return path+[new]
+    q.append((new,path+[new]))
+    seen.add(new)
+ return []
+for m,c,b in solve():
+ print(f"Left: M={m} C={c} | Boat: {'Left' if b else 'Right'}")
+
+5.alphabeta pruning
+
+def alphabeta(depth, node_index, is_max, scores, alpha, beta, height):
+    if depth == height:
+        return scores[node_index]
+    if is_max:
+        best = float('-inf')
+        best = max(best, alphabeta(depth + 1, node_index * 2, False, scores, alpha, beta, height))
+        alpha = max(alpha, best)
+        if beta <= alpha:
+            return best
+        best = max(best, alphabeta(depth + 1, node_index * 2 + 1, False, scores, alpha, beta, height))
+        alpha = max(alpha, best)
+        return best
+    else:
+        best = float('inf')
+        best = min(best, alphabeta(depth + 1, node_index * 2, True, scores, alpha, beta, height))
+        beta = min(beta, best)
+        if beta <= alpha:
+            return best
+        best = min(best, alphabeta(depth + 1, node_index * 2 + 1, True, scores, alpha, beta, height))
+        beta = min(beta, best)
+        return best
+scores = [1,4,7,2,3,0,6,5]
+height = 3
+best_value = alphabeta(0, 0, True, scores, float('-inf'), float('inf'), height)
+print("The optimal value is:", best_value)
+
+6.suduko
+def valid(lst,row,col,val):
+    for i in range(9):
+        if lst[i][col]==val:
+            return False
+    for j in range(9):
+        if lst[row][j]==val:
+            return False
+    i=row-row%3
+    j=col-col%3
+    for rowindex in range(3):
+        for colindex in range(3):
+            if lst[i+rowindex][j+colindex]==val:
+                return False
+    return True
+def solvesudoko(a,index):
+    if index==81:
+        return True
+    row=index//9
+    col=index%9
+    if a[row][col]!=0:
+        return solvesudoko(a,index+1)
+    else:
+        for val in range(1,10):
+            if valid(a,row,col,val):
+                a[row][col]=val
+                result=solvesudoko(a,index+1)
+                if result:
+                    return result
+                a[row][col]=0
+a=[[7,0,0,0,0,0,2,0,0],
+[4,0,2,0,0,0,0,0,3],
+[0,0,0,2,0,1,0,0,0],
+[3,0,0,1,8,0,0,9,7],
+[0,0,9,0,7,0,6,0,0],
+[6,5,0,0,3,2,0,0,1],
+[0,0,0,4,0,9,0,0,0],
+[5,0,0,0,0,0,1,0,6],
+[0,0,6,0,0,0,0,0,8]]
+solvesudoko(a,0)
+for val in a:
+    print(val)
+
+7.2 layer feed forward
+import numpy as np
+def sigmoid(x): return 1 / (1 + np.exp(-x))
+def dsigmoid(x): return x * (1 - x)
+X = np.array([[0,0],[0,1],[1,0],[1,1]])
+y = np.array([[0],[1],[1],[0]])
+np.random.seed(1)
+W1 = np.random.rand(2,2)
+W2 = np.random.rand(2,1)
+lr = 0.1
+for _ in range(10000):
+    h = sigmoid(X @ W1)
+    o = sigmoid(h @ W2)
+    e = y - o
+    d = e * dsigmoid(o)
+    W2 += h.T @ d * lr
+    W1 += X.T @ (d @ W2.T * dsigmoid(h)) * lr
+print(np.round(o, 3))
+
+8.vaccum cleaner
+def simple_reflex_agent(location, status):
+    if status == 'Dirty':
+        return 'Suck'
+    elif location == 'A':
+        return 'Move to B'
+    elif location == 'B':
+        return 'Move to A'
+environment = {'A': 'Dirty', 'B': 'Dirty'}
+location = 'A'
+for _ in range(4):
+    status = environment[location]
+    action = simple_reflex_agent(location, status)
+    print(f"Agent at {location} | Status: {status} | Action: {action}")
+    if action == 'Suck':
+        environment[location] = 'Clean'
+    elif action == 'Move to B':
+        location = 'B'
+    elif action == 'Move to A':
+        location = 'A'
+
+9.
+
+
+
+
+
+
+
+
+
